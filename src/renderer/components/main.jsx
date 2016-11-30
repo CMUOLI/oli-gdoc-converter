@@ -1,5 +1,5 @@
 import React from 'react';
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import {shell} from 'electron';
 import FolderPicker from './folder-picker';
@@ -16,12 +16,15 @@ export default class Main extends React.Component {
         this.handleSelectAll = this.handleSelectAll.bind(this);
         this.handleRefreshSourceFolder = this.handleRefreshSourceFolder.bind(this);
         this.handleConvert = this.handleConvert.bind(this);
+        this.handleRefreshDestFolder = this.handleRefreshDestFolder.bind(this);
+        this.handleCommentOut = this.handleCommentOut.bind(this);
         this.state = {
             sourceFolder: 'none',
             destFolder: 'none',
             sourceFiles: [],
             destFiles: [],
-            inlineCommentOut: "true"
+            inlineCommentOut: true,
+            selectAll: false
         };
     }
 
@@ -42,25 +45,55 @@ export default class Main extends React.Component {
     handleDestFolder(folder) {
         let s = this.state;
         s.destFolder = folder;
-        fs.readdirSync(folder).forEach((name) => {
-            let fullName = path.join(folder, name);
-            let stats = fs.statSync(fullName);
-            if (stats.isFile()) {
-                s.destFiles.push(name);
-            }
-        });
-        this.setState(s);
+        s.destFiles = [];
+        let setState = this.setState.bind(this);
+        fs.walk(folder)
+            .on('data', function (item) {
+                if (item.stats.isFile() && item.path.endsWith(".xml")) {
+                    let name = path.basename(item.path);
+                    if (!s.destFiles.includes(name)) {
+                        s.destFiles.push(name);
+                    }
+                }
+            })
+            .on('end', function () {
+                setState(s);
+            });
+
+    }
+
+    handleRefreshDestFolder() {
+        let s = this.state;
+        s.destFiles = [];
+        let setState = this.setState.bind(this);
+        fs.walk(s.destFolder)
+            .on('data', function (item) {
+                if (item.stats.isFile() && item.path.endsWith(".xml")) {
+                    let name = path.basename(item.path);
+                    if (!s.destFiles.includes(name)) {
+                        s.destFiles.push(name);
+                    }
+                }
+            })
+            .on('end', function () {
+                setState(s);
+            });
     }
 
     handleSelection(selection) {
         const list = this.state.sourceFiles;
+        let allSelected = true;
         list.forEach((f) => {
             if (f.filename === selection.filename) {
                 f.selected = selection.selected;
             }
+            if (!f.selected && allSelected) {
+                allSelected = false;
+            }
         });
         let s = this.state;
         s.sourceFiles = list;
+        s.selectAll = allSelected;
         this.setState(s);
     }
 
@@ -88,6 +121,7 @@ export default class Main extends React.Component {
         });
         let s = this.state;
         s.sourceFiles = list;
+        s.selectAll = select;
         this.setState(s);
     }
 
@@ -116,7 +150,12 @@ export default class Main extends React.Component {
             return;
         }
         //console.log("File to be converted 2");
-        const convert = new Converter({srcFiles: sourceList, destFolder: dFolder, inlineCommentOut: commentOut});
+        const convert = new Converter({
+            srcFiles: sourceList,
+            destFolder: dFolder,
+            inlineCommentOut: commentOut,
+            handleDestFolderRefresh: this.handleRefreshDestFolder
+        });
         convert.convert();
     }
 
@@ -131,6 +170,7 @@ export default class Main extends React.Component {
         const destFolder = this.state.destFolder;
         const sourceFiles = this.state.sourceFiles;
         const destFiles = this.state.destFiles;
+        const selectAll = this.state.selectAll;
         return (
             <div style={{border: "1px solid #c4c0c0", width: "800px", padding: "10px", margin: "35px 20px 20px 20px"}}>
                 <h4 style={{textAlign: "center", margin: "2px"}}>OLI Google Docs Converter</h4>
@@ -138,7 +178,7 @@ export default class Main extends React.Component {
                     <div style={{float: "left", width: "49%"}}>
                         <FolderPicker choice="Choose Source Folder" folder={sourceFolder}
                                       onChange={this.handleSourceFolder}/>
-                        <SourceFiles sourceFiles={sourceFiles} onChange={this.handleSelection}
+                        <SourceFiles sourceFiles={sourceFiles} selectAll={selectAll} onChange={this.handleSelection}
                                      onSelectAll={this.handleSelectAll} onRefresh={this.handleRefreshSourceFolder}/>
                     </div>
                     <div style={{float: "right", width: "49%"}}>
@@ -152,7 +192,8 @@ export default class Main extends React.Component {
                 </div>
                 <div style={{border: "1px solid #c4c0c0"}}>
                     <h5 style={{margin: "2px", textDecoration: "underline"}}>Options</h5>
-                    <input type="checkbox" name="opt" onChange={this.handleCommentOut}/>
+                    <input type="checkbox" name="opt" checked={this.state.inlineCommentOut}
+                           onChange={this.handleCommentOut}/>
                     <label>comment-out inline assessment tags</label>
                 </div>
             </div>

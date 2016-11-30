@@ -20,6 +20,7 @@ export default class Converter {
         this.srcFiles = argWrapper.srcFiles;
         this.destFolder = argWrapper.destFolder;
         this.inlineCommentOut = argWrapper.inlineCommentOut;
+        this.handleDestFolderRefresh = argWrapper.handleDestFolderRefresh;
         this.handleprocess = this.process.bind(this);
         this.handleN = this.handleNode.bind(this);
     }
@@ -75,6 +76,8 @@ export default class Converter {
             }
         });
         const handleN = this.handleN;
+        const commentOutInline = this.inlineCommentOut;
+        const handleDestFolderRefresh = this.handleDestFolderRefresh;
         fs.readFile(docFile, 'utf8', function (err, data) {
             jsdom.env(
                 data,
@@ -97,12 +100,12 @@ export default class Converter {
                             let newDoc = false;
                             if (xmlDoc === null) {
                                 newDoc = true;
-                                xmlDoc = $($.parseXML(en+wbDocType+ss+'<workbook_page/>'));
-                                pages.push(xmlDoc);
+                                xmlDoc = $($.parseXML('<workbook_page/>'));
                                 let id = path.basename(docFile, '.html');
                                 if (cntWbs > 0) {
                                     id = id + cntWbs;
                                 }
+                                pages.push({id:id, doc:xmlDoc});
                                 $('workbook_page', xmlDoc).attr({id: id});
                                 $('workbook_page', xmlDoc).append($('<head/>', xmlDoc));
                                 $('head', xmlDoc).append($('<title/>', xmlDoc).text($(this).text()));
@@ -120,16 +123,16 @@ export default class Converter {
                                 if (sp.length > 2) {
                                     // Create an learning objective file
                                     if (ldDoc === null) {
-                                        ldDoc = $($.parseXML('<?xml version="1.0" encoding="UTF-8"?><objectives/>'));
                                         let id = path.basename(docFile, '.html') + "_LO";
-                                        $('objectives', ldDoc).attr({id: id});
-                                        $('objectives', ldDoc).append($('<title/>', ldDoc).text("Learning Objectives"));
-                                        let ob = $('<objective/>', ldDoc);
-                                        let s = sp[1];
-                                        ob.attr({id: s});
-                                        ob.text(sp[2]);
-                                        $('objectives', ldDoc).append(ob);
+                                        ldDoc = {id:id, doc:$($.parseXML('<objectives/>'))};
+                                        $('objectives', ldDoc.doc).attr({id: id});
+                                        $('objectives', ldDoc.doc).append($('<title/>', ldDoc.doc).text("Learning Objectives"));
                                     }
+                                    let ob = $('<objective/>', ldDoc.doc);
+                                    let s = sp[1];
+                                    ob.attr({id: s});
+                                    ob.text(sp[2]);
+                                    $('objectives', ldDoc.doc).append(ob);
                                 }
                                 let obref = $('<objref/>', xmlDoc);
                                 let s = sp[1];
@@ -145,16 +148,22 @@ export default class Converter {
                             } else if ($(this).text().toUpperCase().startsWith("LEARNBYDOING:")) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
-                                let inline = $('<wb:inline/>', xmlDoc);
                                 let s = sp[1];
-                                inline.attr({idref: s});
-                                inline.attr({purpose: "learnbydoing"});
+                                let inline = null;
+                                if(commentOutInline){
+                                    inline = $('<!--<wb:inline idref="'+s+'" purpose="learnbydoing"/>-->');
+                                }else{
+                                    inline = $('<wbinline/>', xmlDoc);
+                                    inline.attr({idref: s});
+                                    inline.attr({purpose: "learnbydoing"});
+                                }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
                             } else if ($(this).text().toUpperCase().startsWith("YOUTUBE:")) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
+
                                 let youtube = $('<youtube/>', xmlDoc);
                                 let s = sp[1];
                                 youtube.attr({src: s});
@@ -167,20 +176,30 @@ export default class Converter {
                             } else if ($(this).text().toUpperCase().startsWith("MANYSTUDENTSWONDER:")) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
-                                let inline = $('<wb:inline/>', xmlDoc);
                                 let s = sp[1];
-                                inline.attr({idref: s});
-                                inline.attr({purpose: "manystudentswonder"});
+                                let inline = null;
+                                if(commentOutInline) {
+                                    inline = $('<!--<wb:inline idref="'+s+'" purpose="manystudentswonder"/>-->');
+                                }else {
+                                    let inline = $('<wbinline/>', xmlDoc);
+                                    inline.attr({idref: s});
+                                    inline.attr({purpose: "manystudentswonder"});
+                                }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
                             } else if ($(this).text().toUpperCase().startsWith("DIDIGETTHIS:")) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
-                                let inline = $('<wb:inline/>', xmlDoc);
                                 let s = sp[1];
-                                inline.attr({idref: s});
-                                inline.attr({purpose: "didigetthis"});
+                                let inline = null;
+                                if(commentOutInline) {
+                                    inline = $('<!--<wb:inline idref="'+s+'" purpose="didigetthis"/>-->');
+                                }else {
+                                    inline = $('<wbinline/>', xmlDoc);
+                                    inline.attr({idref: s});
+                                    inline.attr({purpose: "didigetthis"});
+                                }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
@@ -262,12 +281,50 @@ export default class Converter {
                             xmlStack.push(el);
                         }
                     });
-                    var serializeDocument = jsdom.serializeDocument;
-                    pages.forEach((d) => {
-                        console.log("Workbook " +en+wbDocType+ss+serializeDocument(d.context));
+
+                    fs.removeSync(docFile, function (err) {
+                        if (err)
+                            return console.error("Error! removing " +docFile+" "+ err);
+                        console.log("success! removing " +docFile);
                     });
+
+                    var serializeDocument = jsdom.serializeDocument;
+                    const wbFolder = path.join(xFolder, "x-oli-workbook_page");
+                    fs.ensureDirSync(wbFolder, function (err) {
+                        if (err)
+                            return console.error("Error! creating x-oli-workbook_page folder"+ err);
+                        console.log("success! creating x-oli-workbook_page folder");
+                    });
+                    pages.forEach((d) => {
+                        let wbContent = serializeDocument(d.doc.context);
+                        wbContent = wbContent.replace(/wbinline/g, "wb:inline");
+                        let fullWbContent = en+wbDocType+ss+wbContent;
+                        console.log("Workbook " +fullWbContent);
+                        let wbFile = path.join(wbFolder, d.id+".xml");
+                        fs.outputFile(wbFile, fullWbContent, function (err) {
+                            if (err)
+                                return console.error("Error! creating workbook file " + wbFile +" "+ err);
+                            console.log("success! creating workbook file");
+                            handleDestFolderRefresh();
+                        })
+                    });
+
                     if (ldDoc !== null) {
-                        console.log("Objectives "  +en+loDocType+ss+serializeDocument(ldDoc.context));
+                        const loFolder = path.join(xFolder, "x-oli-learning_objectives");
+                        fs.ensureDirSync(loFolder, function (err) {
+                            if (err)
+                                return console.error("Error! creating x-oli-learning_objectives folder"+ err);
+                            console.log("success! creating x-oli-learning_objectives folder");
+                        });
+                        let fullLoContent = en+loDocType+ss+serializeDocument(ldDoc.doc.context);
+                        console.log("Objectives "  +fullLoContent);
+                        let loFile = path.join(loFolder, ldDoc.id+".xml");
+                        fs.outputFile(loFile, fullLoContent, function (err) {
+                            if (err)
+                                return console.error("Error! creating Learning Objectives file " + loFile +" "+ err);
+                            console.log("success! creating Learning Objectives file");
+                            handleDestFolderRefresh();
+                        })
                     }
                 }
             );
