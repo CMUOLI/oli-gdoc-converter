@@ -4,7 +4,7 @@ node_modules/
 nbproject/
 bower_components/
 .serve/
+.idea/
 dist/
 release/
 npm-debug.log
-

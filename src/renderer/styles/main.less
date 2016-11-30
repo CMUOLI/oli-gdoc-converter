@@ -2,53 +2,53 @@
 
 html,
 body {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 body {
-    cursor: default;
-    -webkit-user-select: none;
-    font-family: @font-family;
-    overflow: hidden;
+  cursor: default;
+  -webkit-user-select: none;
+  font-family: @font-family;
+  overflow: hidden;
+  -webkit-app-region: drag;
+  margin: 0;
+
+  a, a:hover, a:visited, a:active, a:focus {
+    text-decoration: none;
+  }
+
+  .main {
+    text-align: center;
     -webkit-app-region: drag;
+  }
+
+  .emoji-wall {
+    img {
+      position: relative;
+      left: 14px;
+    }
+  }
+
+  span.icontext {
+    background: transparent url(../assets/images/folder.svg) no-repeat inherit left center;
+    padding-left: 10px /* at least the width of the icon */
+  }
+  ul {
+    list-style-type: none;
     margin: 0;
+    padding: 0;
+  }
+  li {
+    border-bottom: 1px solid #ccc;
+  }
+  .group:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
 
-    a, a:hover, a:visited, a:active, a:focus {
-        text-decoration: none;
-    }
-
-    .main {
-        text-align: center;
-        -webkit-app-region: drag;
-    }
-
-    .emoji-wall {
-        img {
-            position: relative;
-            left: 14px;
-        }
-    }
-
-    span.icontext {
-        background: transparent url(../assets/images/folder.svg) no-repeat inherit left center;
-        padding-left: 10px /* at least the width of the icon */
-    }
-    ul {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-    }
-    li {
-        border-bottom: 1px solid #ccc;
-    }
-    .group:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-
-    * {
-        transition: all 1s ease;
-    }
+  * {
+    transition: all 1s ease;
+  }
 }
