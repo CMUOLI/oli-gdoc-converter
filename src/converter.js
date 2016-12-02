@@ -511,7 +511,7 @@ export default class Converter {
                         let fullWbContent = en + wbDocType + ss + wbContent;
                         // Pretty print the content before writing to file
                         let xml_pp = pd.pd.xml(fullWbContent);
-                        console.log("Workbook " + fullWbContent);
+                        console.log("Workbook " + xml_pp);
                         let wbFile = path.join(wbFolder, d.id + ".xml");
                         fs.outputFile(wbFile, xml_pp, function (err) {
                             if (err)
@@ -561,12 +561,17 @@ export default class Converter {
         t = t.toLowerCase();
         if (t === "p") {
             let p = $('<p/>', xmlDoc);
+            //let textOnly = true;
             $(childHtml).contents().each(function () {
-                //let z = $(this).prop("tagName");
-                //console.log("Paragraph child " + z);
+                ///let z = $(this).prop("tagName");
+                // if (z){
+                //     textOnly = false;
+                // }
                 handleN($, xmlDoc, p, $(this), handleN);
             });
-            parentXml.append(p);
+            // if(textOnly && childHtml.text().trim()) {
+                 parentXml.append(p);
+            // }
 
         } else if (t === "span") {
             //:TODO: extract font encoded OLI elements
