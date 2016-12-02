@@ -9,7 +9,9 @@ app.on('window-all-closed', () => {
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
         width: 880,
-        height: 760,
+        height: 660,
+        minHeight: 640,
+        minWidth: 870,
         titleBarStyle: 'hidden-inset'
     });
 

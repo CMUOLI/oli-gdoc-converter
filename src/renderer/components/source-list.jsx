@@ -25,14 +25,20 @@ export default class SourceFiles extends React.Component {
         const selectAll = this.props.selectAll;
         return (
             <div style={{border: "1px solid #c4c0c0", padding: "5px"}}>
-                <input type="checkbox" name="selectall" checked={selectAll} onChange={this.handleSelectAll}/>
-                <label>Select All</label>
-                <button onClick={this.handleSelectAll}>Refresh</button>
+                <div className="group">
+                    <div style={{float: "left", width: "50%"}}>
+                        <input type="checkbox" name="selectall" checked={selectAll} onChange={this.handleSelectAll}/>
+                        <label>Select All</label>
+                    </div>
+                    <div style={{float: "right", width: "50%",textAlign: "right"}}>
+                        <button onClick={this.handleSelectAll}>Refresh</button>
+                    </div>
+                </div>
                 <div style={{
                     border: "1px solid #000",
                     marginTop: "5px",
                     padding: "3px",
-                    height: "300px",
+                    height: "350px",
                     overflow: "scroll"
                 }}>
                     <ul>

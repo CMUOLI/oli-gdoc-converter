@@ -10,7 +10,8 @@
     "react-dom": "^15.1.0",
     "pify": "^2.3.0",
     "jsdom": "^9.8.3",
-    "unzip": "^0.1.11"
+    "unzip": "^0.1.11",
+    "pretty-data": "^0.40.0"
   },
   "private": true,
   "scripts": {

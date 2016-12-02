@@ -13,7 +13,7 @@ export default class DestFiles extends React.Component {
                     border: "1px solid #000",
                     marginTop: "23px",
                     padding: "3px",
-                    height: "300px",
+                    height: "350px",
                     overflow: "scroll"
                 }}>
                     <ul>

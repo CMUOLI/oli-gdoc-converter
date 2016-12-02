@@ -16,7 +16,6 @@ export default class FolderPicker extends React.Component {
         if (fileNames === undefined) return;
 
         var fileName = fileNames[0];
-        //console.log("testing console output handleFileNames " + fileName);
         let stats = fs.statSync(fileName);
 
         if (stats.isFile()) {
@@ -28,13 +27,12 @@ export default class FolderPicker extends React.Component {
     render() {
         return (
             <div>
-                <div>
+                <div style={{marginBottom:"3px"}}>
                     <button onClick={this.handleClick}>{this.props.choice}</button>
                 </div>
-                <div>
+                <div style={{overflow: "scroll"}}>
                     <div style={{lineHeight: "20px"}}>
-                        <img src="../assets/images/folder.svg"
-                             style={{verticalAlign: "middle", height: "20px", width: "20px"}}/>&nbsp;{this.props.folder}
+                        <span className="icontext">{this.props.folder}</span>
                     </div>
                 </div>
             </div>

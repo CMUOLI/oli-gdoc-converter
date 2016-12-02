@@ -18,15 +18,24 @@ export default class Main extends React.Component {
         this.handleConvert = this.handleConvert.bind(this);
         this.handleRefreshDestFolder = this.handleRefreshDestFolder.bind(this);
         this.handleCommentOut = this.handleCommentOut.bind(this);
+        this.handleErrors = this.handleErrors.bind(this);
+        this.handleShowProgress = this.handleShowProgress.bind(this);
         this.state = {
             sourceFolder: 'none',
             destFolder: 'none',
             sourceFiles: [],
             destFiles: [],
             inlineCommentOut: true,
-            selectAll: false
+            selectAll: false,
+            showProgress: false,
+            error: null
         };
     }
+
+    // async sourceDestFolders() {
+    //     this.handleSourceFolder('/Users/eberly/Staff/GoogleConveter');
+    //     this.handleDestFolder('/Users/eberly/Staff/GoogleConveter/sampleoutput');
+    // }
 
     handleSourceFolder(folder) {
         let s = this.state;
@@ -65,6 +74,7 @@ export default class Main extends React.Component {
     handleRefreshDestFolder() {
         let s = this.state;
         s.destFiles = [];
+        s.showProgress = false;
         let setState = this.setState.bind(this);
         fs.walk(s.destFolder)
             .on('data', function (item) {
@@ -127,11 +137,16 @@ export default class Main extends React.Component {
 
     handleConvert() {
         let s = this.state;
-        // Source and Destination folders must be supplied
+        const handleErrors = this.handleErrors;
         if (s.sourceFolder === "none" || s.destFolder === "none") {
-            return;
+            return handleErrors("Error! Both Source and Destination folders must be selected first");
         }
-        //console.log("File to be converted 1");
+        if(s.showProgress){
+            return handleErrors("Error! Previous request still in progress");
+        }
+        const hErrors = this.handleErrors;
+        hErrors(null);
+        const sProgress = this.handleShowProgress;
         let sFolder = s.sourceFolder;
         let dFolder = s.destFolder;
         let commentOut = s.inlineCommentOut;
@@ -140,22 +155,21 @@ export default class Main extends React.Component {
         list.forEach((f) => {
             if (f.selected === true) {
                 let fullName = path.join(sFolder, f.filename);
-                //console.log("File to be converted " + fullName);
                 sourceList.push(fullName);
             }
         });
         // No source files selected
         if (sourceList.length === 0) {
-            //console.log("File to be converted 2");
-            return;
+            return handleErrors("Error! At least one source file must be selected");
         }
-        //console.log("File to be converted 2");
         const convert = new Converter({
             srcFiles: sourceList,
             destFolder: dFolder,
             inlineCommentOut: commentOut,
-            handleDestFolderRefresh: this.handleRefreshDestFolder
+            handleDestFolderRefresh: this.handleRefreshDestFolder,
+            handleErrors: handleErrors
         });
+        sProgress(true);
         convert.convert();
     }
 
@@ -165,37 +179,72 @@ export default class Main extends React.Component {
         this.setState(s);
     }
 
+    handleErrors(err) {
+        let s = this.state;
+        s.error = err;
+        this.setState(s);
+    }
+
+    handleShowProgress(progress){
+        let s = this.state;
+        s.showProgress = progress;
+        this.setState(s);
+    }
+
     render() {
         const sourceFolder = this.state.sourceFolder;
         const destFolder = this.state.destFolder;
         const sourceFiles = this.state.sourceFiles;
         const destFiles = this.state.destFiles;
         const selectAll = this.state.selectAll;
+
         return (
-            <div style={{border: "1px solid #c4c0c0", width: "800px", padding: "10px", margin: "35px 20px 20px 20px"}}>
+            <div style={{
+                border: "1px solid #c4c0c0",
+                minWidth: "800px",
+                padding: "10px",
+                margin: "35px 20px 20px 20px"
+            }}>
                 <h4 style={{textAlign: "center", margin: "2px"}}>OLI Google Docs Converter</h4>
                 <div className="group">
                     <div style={{float: "left", width: "49%"}}>
-                        <FolderPicker choice="Choose Source Folder" folder={sourceFolder}
-                                      onChange={this.handleSourceFolder}/>
-                        <SourceFiles sourceFiles={sourceFiles} selectAll={selectAll} onChange={this.handleSelection}
-                                     onSelectAll={this.handleSelectAll} onRefresh={this.handleRefreshSourceFolder}/>
+                        <div style={{marginBottom:"5px"}}>
+                            <FolderPicker choice="Choose Source Folder" folder={sourceFolder}
+                                          onChange={this.handleSourceFolder}/>
+                        </div>
+                        <div>
+                            <SourceFiles sourceFiles={sourceFiles} selectAll={selectAll} onChange={this.handleSelection}
+                                         onSelectAll={this.handleSelectAll} onRefresh={this.handleRefreshSourceFolder}/>
+                        </div>
                     </div>
                     <div style={{float: "right", width: "49%"}}>
-                        <FolderPicker choice="Choose Destination Folder" folder={destFolder}
-                                      onChange={this.handleDestFolder}/>
-                        <DestFiles destFiles={destFiles}/>
+                        <div style={{marginBottom:"5px"}}>
+                            <FolderPicker choice="Choose Destination Folder" folder={destFolder}
+                                          onChange={this.handleDestFolder}/>
+                        </div>
+                        <div>
+                            <DestFiles destFiles={destFiles}/>
+                        </div>
                     </div>
                 </div>
+                {this.state.showProgress && <div style={{margin: "auto"}} className="three-bounce">
+                    <div className="bounce1"/>
+                    <div className="bounce2"/>
+                    <div className="bounce3"/>
+                </div>}
+
                 <div style={{textAlign: "center", margin: "10px"}}>
                     <button onClick={this.handleConvert}>Convert to OLI Workbook Pages</button>
                 </div>
-                <div style={{border: "1px solid #c4c0c0"}}>
+                <div >
                     <h5 style={{margin: "2px", textDecoration: "underline"}}>Options</h5>
                     <input type="checkbox" name="opt" checked={this.state.inlineCommentOut}
                            onChange={this.handleCommentOut}/>
                     <label>comment-out inline assessment tags</label>
                 </div>
+                {this.state.error && <div style={{color: "red"}}>
+                    {this.state.error}
+                </div>}
             </div>
         );
     }
