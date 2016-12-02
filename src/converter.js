@@ -91,7 +91,7 @@ export default class Converter {
                 data,
                 ["http://code.jquery.com/jquery.js"],
                 function (err, window) {
-                    if(err){
+                    if (err) {
                         return handleErrors('Error! parsing document to be converted ' + docFile);
                     }
                     const $ = window.$;
@@ -129,6 +129,7 @@ export default class Converter {
                                 console.log("Document to be converted not well formed");
                                 return handleErrors('Error! Document to be converted not well formed ' + docFile);
                             }
+                            //:TODO: refactor code for better DRY
                             if ($(this).text().toUpperCase().startsWith("OBJECTIVE:")) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
@@ -223,7 +224,7 @@ export default class Converter {
                                 if (sp.length > 2) {
                                     definition.attr({id: sp[1]});
                                     definition.append($('<term/>', xmlDoc).text(sp[2]));
-                                }else{
+                                } else {
                                     definition.append($('<term/>', xmlDoc).text(sp[1]));
                                 }
                                 let meaning = $('<meaning/>', xmlDoc);
@@ -431,19 +432,30 @@ export default class Converter {
                             if (z.trim()) {
                                 let href = $(this).attr('href');
                                 if (href) {
-                                    //Transform from google docs encoding
-                                    // (Example: https://www.google.com/url?q=http://oli.cmu.edu&amp;sa=D&amp;ust=1480606251769000&amp;usg=AFQjCNEOWmbHZbmnhO9gTDpY3QU9SBOvVQ)
-                                    let pHref = url.parse(href, true);
-                                    let query = pHref.query;
-                                    if (query && query.q) {
-                                        href = query.q;
+                                    if (href.startsWith("#cmnt")) {
+                                        // Process Google Docs comment
+                                        let commentRef = $(href);
+                                        if (commentRef && commentRef.parent()) {
+                                            let comment = commentRef.parent().text();
+                                            let el = xmlStack.pop();
+                                            el.append($('<!--' + comment + '-->'));
+                                            xmlStack.push(el);
+                                        }
+                                    } else {
+                                        //Transform from google docs encoding
+                                        // (Example: https://www.google.com/url?q=http://oli.cmu.edu&amp;sa=D&amp;ust=1480606251769000&amp;usg=AFQjCNEOWmbHZbmnhO9gTDpY3QU9SBOvVQ)
+                                        let pHref = url.parse(href, true);
+                                        let query = pHref.query;
+                                        if (query && query.q) {
+                                            href = query.q;
+                                        }
+                                        let l = $('<a/>', xmlDoc);
+                                        l.attr({href: href});
+                                        l.text(z);
+                                        let el = xmlStack.pop();
+                                        el.append(l);
+                                        xmlStack.push(el);
                                     }
-                                    let l = $('<a/>', xmlDoc);
-                                    l.attr({href: href});
-                                    l.text(z);
-                                    let el = xmlStack.pop();
-                                    el.append(l);
-                                    xmlStack.push(el);
                                 }
                             }
                         } else if (t === "table") {
@@ -485,18 +497,21 @@ export default class Converter {
                     });
                     pages.forEach((d) => {
                         let wbContent = serializeDocument(d.doc.context);
+                        // Do some post processing cleanup
                         wbContent = wbContent.replace(/wbinline/g, "wb:inline");
                         wbContent = wbContent.replace(/<tbody>/g, "");
                         wbContent = wbContent.replace(/<\/tbody>/g, "");
                         wbContent = wbContent.replace(/<p\/>/g, "");
+                        wbContent = wbContent.replace(/<p><\/p>/g, "");
                         wbContent = wbContent.replace(/<span>/g, "");
                         wbContent = wbContent.replace(/<\/span>/g, "");
                         wbContent = wbContent.replace(/<span\/>/g, "");
                         wbContent = wbContent.replace(/<a href/g, "<link href");
                         wbContent = wbContent.replace(/<\/a>/g, "</link>");
                         let fullWbContent = en + wbDocType + ss + wbContent;
+                        // Pretty print the content before writing to file
                         let xml_pp = pd.pd.xml(fullWbContent);
-                        //console.log("Workbook " + xml_pp);
+                        console.log("Workbook " + fullWbContent);
                         let wbFile = path.join(wbFolder, d.id + ".xml");
                         fs.outputFile(wbFile, xml_pp, function (err) {
                             if (err)
@@ -509,7 +524,7 @@ export default class Converter {
                     if (ldDoc !== null) {
                         const loFolder = path.join(xFolder, "x-oli-learning_objectives");
                         fs.ensureDirSync(loFolder, function (err) {
-                            if (err){
+                            if (err) {
                                 console.error("Error! creating x-oli-learning_objectives folder" + err);
                                 return handleErrors("Error! creating x-oli-learning_objectives folder" + err);
                             }
@@ -517,10 +532,10 @@ export default class Converter {
                         });
                         let fullLoContent = en + loDocType + ss + serializeDocument(ldDoc.doc.context);
                         let xml_pp = pd.pd.xml(fullLoContent);
-                        //console.log("Objectives "  +fullLoContent);
+                        //console.log("Objectives "  +xml_pp);
                         let loFile = path.join(loFolder, ldDoc.id + ".xml");
                         fs.outputFile(loFile, xml_pp, function (err) {
-                            if (err){
+                            if (err) {
                                 console.error("Error! creating Learning Objectives file " + loFile + " " + err);
                                 return handleErrors("Error! creating Learning Objectives file " + loFile + " " + err);
                             }
@@ -562,35 +577,35 @@ export default class Converter {
             let fontFamily = childHtml.css("fontFamily");
             let textDecoration = childHtml.css("textDecoration");
             let em = null;
-            if(fontStyle && fontStyle === 'italic') {
+            if (fontStyle && fontStyle === 'italic') {
                 //console.log("font style " + fontStyle + " " +childHtml.text());
                 em = $('<em/>', xmlDoc);
                 em.attr({style: 'italic'});
                 s.append(em);
             }
-            if(fontWeight && fontWeight === '700'){
+            if (fontWeight && fontWeight === '700') {
                 //console.log("font style " + fontStyle + " " +childHtml.text());
                 em = $('<em/>', xmlDoc);
                 em.attr({style: 'bold'});
                 s.append(em);
             }
             // Red font color
-            if(fontColor && fontColor === 'rgb(255, 0, 0)') {
+            if (fontColor && fontColor === 'rgb(255, 0, 0)') {
                 //console.log("color " + fontColor+ " " +childHtml.text());
                 em = $('<em/>', xmlDoc);
                 em.attr({style: 'highlight'});
                 s.append(em);
             }
-            if(textDecoration && textDecoration === 'line-through'){
+            if (textDecoration && textDecoration === 'line-through') {
                 em = $('<em/>', xmlDoc);
                 em.attr({style: 'line-through'});
                 s.append(em);
             }
-            if(fontFamily && fontFamily === '"Courier New"'){
+            if (fontFamily && fontFamily === '"Courier New"') {
                 em = $('<var/>', xmlDoc);
                 s.append(em);
             }
-            if(em){
+            if (em) {
                 s = em;
             }
             childHtml.contents().each(function () {
@@ -602,15 +617,24 @@ export default class Converter {
             if (z.trim()) {
                 let href = childHtml.attr('href');
                 if (href) {
-                    let pHref = url.parse(href, true);
-                    let query = pHref.query;
-                    if (query && query.q) {
-                        href = query.q;
+                    if (href.startsWith("#cmnt")) {
+                        // Process Google Docs comment
+                        let commentRef = $(href);
+                        if (commentRef && commentRef.parent()) {
+                            let comment = commentRef.parent().text();
+                            parentXml.append($('<!--' + comment + '-->'));
+                        }
+                    } else {
+                        let pHref = url.parse(href, true);
+                        let query = pHref.query;
+                        if (query && query.q) {
+                            href = query.q;
+                        }
+                        let l = $('<a/>', xmlDoc);
+                        l.attr({href: href});
+                        l.text(z);
+                        parentXml.append(l);
                     }
-                    let l = $('<a/>', xmlDoc);
-                    l.attr({href: href});
-                    l.text(z);
-                    parentXml.append(l);
                 }
             }
         } else if (t === "table") {
@@ -664,9 +688,42 @@ export default class Converter {
                 handleN($, xmlDoc, parentXml, $(this), handleN);
             });
         } else if (t === "div") {
+            // childHtml.contents().each(function () {
+            //     handleN($, xmlDoc, parentXml, $(this), handleN);
+            // });
+        } else if (t === "sup") {
+            let sup = $('<sup/>', xmlDoc);
+            let com = false;
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, parentXml, $(this), handleN);
+                let href = $(this).attr('href');
+                //Look for comment
+                if (href && href.startsWith("#cmnt")) {
+                    com = true;
+                    handleN($, xmlDoc, parentXml, $(this), handleN);
+                } else {
+                    handleN($, xmlDoc, sup, $(this), handleN);
+                }
             });
+            if(!com) {
+                parentXml.append(sup);
+            }
+
+        } else if (t === "sub") {
+            let sub = $('<sub/>', xmlDoc);
+            let com = false;
+            childHtml.contents().each(function () {
+                let href = $(this).attr('href');
+                //Look for comment
+                if (href && href.startsWith("#cmnt")) {
+                    com = true;
+                    handleN($, xmlDoc, parentXml, $(this), handleN);
+                } else {
+                    handleN($, xmlDoc, sub, $(this), handleN);
+                }
+            });
+            if(!com) {
+                parentXml.append(sub);
+            }
         }
     }
 }
