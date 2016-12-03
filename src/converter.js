@@ -11,7 +11,6 @@ import jsdom from 'jsdom';
 import url from 'url';
 import pd from 'pretty-data';
 
-
 export default class Converter {
     /**
      * Creates a converter instance.
@@ -721,6 +720,7 @@ export default class Converter {
                 handleN($, xmlDoc, parentXml, $(this), handleN);
             });
         } else if (t === "div") {
+            // Assumes div content contains Google Docs specific content
             // childHtml.contents().each(function () {
             //     handleN($, xmlDoc, parentXml, $(this), handleN);
             // });

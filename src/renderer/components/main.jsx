@@ -30,13 +30,7 @@ export default class Main extends React.Component {
             showProgress: false,
             error: null
         };
-        //this.sourceDestFolders();
     }
-
-    // async sourceDestFolders() {
-    //     this.handleSourceFolder('/Users/eberly/Staff/GoogleConveter');
-    //     this.handleDestFolder('/Users/eberly/Staff/GoogleConveter/sampleoutput');
-    // }
 
     handleSourceFolder(folder) {
         let s = this.state;
