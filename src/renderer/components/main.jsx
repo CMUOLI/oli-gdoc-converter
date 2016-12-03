@@ -30,6 +30,7 @@ export default class Main extends React.Component {
             showProgress: false,
             error: null
         };
+        //this.sourceDestFolders();
     }
 
     // async sourceDestFolders() {

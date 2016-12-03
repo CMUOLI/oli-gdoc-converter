@@ -29,8 +29,8 @@ export default class Converter {
         this.handleN = this.handleNode.bind(this);
     }
 
-    convert() {
-        console.log('convert');
+    async convert() {
+        console.log('Convert-document process initiated');
         let dFolder = this.destFolder;
         const hprocess = this.handleprocess;
         const handleErrors = this.handleErrors;
@@ -38,17 +38,17 @@ export default class Converter {
             let fName = path.basename(f, '.zip');
             let xFolder = path.join(dFolder, fName);
             fs.emptyDirSync(xFolder, function (err) {
-                if (!err) {
-                    console.log('success! creating destination unzip folder');
-                } else {
-                    console.log('error! creating destination unzip folder');
+                if (err) {
+                    console.log('Error! creating destination unzip folder');
                     return handleErrors('Error! creating destination unzip folder ' + xFolder);
                 }
+                console.log('Success! creating destination unzip folder');
+
             });
             fs.createReadStream(f)
                 .pipe(unzip.Extract({path: xFolder}))
                 .on('close', function () {
-                    console.log('success! unziping content');
+                    console.log('Success! unziping content');
 
                     let items = []; // files, directories, symlinks, etc
                     fs.walk(xFolder)
@@ -70,14 +70,14 @@ export default class Converter {
         const handleErrors = this.handleErrors;
         items.forEach((f) => {
             if (f.stats.isDirectory() && f.path.endsWith("images")) {
-                console.log("Images directory " + f.path);
+                //console.log("Images directory " + f.path);
                 // Move images directory to webcontent
                 fs.move(f.path, path.join(xFolder, "webcontent"), function (err) {
                     if (err) {
                         console.error(err);
                         return handleErrors('Error! moving images directory to webcontent directory');
                     }
-                    console.log("success!")
+                    console.log('Success! moving images directory to webcontent directory');
                 })
             } else if (f.stats.isFile() && f.path.endsWith(".html")) {
                 docFile = f.path;
@@ -91,7 +91,9 @@ export default class Converter {
                 data,
                 ["http://code.jquery.com/jquery.js"],
                 function (err, window) {
+                    console.log('Done creating jdom environment');
                     if (err) {
+                        console.log('Error! parsing document to be converted ' + docFile);
                         return handleErrors('Error! parsing document to be converted ' + docFile);
                     }
                     const $ = window.$;
@@ -126,7 +128,7 @@ export default class Converter {
                                 xmlStack.push(bod);
                             }
                             if (xmlDoc === null) {
-                                console.log("Document to be converted not well formed");
+                                console.log("'Error! Document to be converted not well formed" + docFile);
                                 return handleErrors('Error! Document to be converted not well formed ' + docFile);
                             }
                             //:TODO: refactor code for better DRY
@@ -481,19 +483,23 @@ export default class Converter {
                             xmlStack.push(el);
                         }
                     });
-
+                    console.log("Document processing done");
                     fs.removeSync(docFile, function (err) {
-                        if (err)
-                            return console.error("Error! removing " + docFile + " " + err);
-                        console.log("success! removing " + docFile);
+                        if (err) {
+                            console.error("Error! removing " + docFile + " " + err);
+                            return handleErrors("Error! removing " + docFile + " " + err);
+                        }
+                        console.log("Success! removing " + docFile);
                     });
 
                     var serializeDocument = jsdom.serializeDocument;
                     const wbFolder = path.join(xFolder, "x-oli-workbook_page");
                     fs.ensureDirSync(wbFolder, function (err) {
-                        if (err)
-                            return console.error("Error! creating x-oli-workbook_page folder" + err);
-                        console.log("success! creating x-oli-workbook_page folder");
+                        if (err) {
+                            console.error("Error! creating x-oli-workbook_page folder" + err);
+                            return handleErrors("Error! creating x-oli-workbook_page folder" + err);
+                        }
+                        console.log("Success! creating x-oli-workbook_page folder");
                     });
                     pages.forEach((d) => {
                         let wbContent = serializeDocument(d.doc.context);
@@ -511,12 +517,15 @@ export default class Converter {
                         let fullWbContent = en + wbDocType + ss + wbContent;
                         // Pretty print the content before writing to file
                         let xml_pp = pd.pd.xml(fullWbContent);
-                        console.log("Workbook " + xml_pp);
+                        //console.log("Workbook " + xml_pp);
                         let wbFile = path.join(wbFolder, d.id + ".xml");
                         fs.outputFile(wbFile, xml_pp, function (err) {
-                            if (err)
-                                return console.error("Error! creating workbook file " + wbFile + " " + err);
-                            console.log("success! creating workbook file " + wbFile);
+                            if (err) {
+                                handleDestFolderRefresh();
+                                console.error("Error! creating workbook file " + wbFile + " " + err);
+                                return handleErrors("Error! creating workbook file " + wbFile + " " + err);
+                            }
+                            console.log("Success! creating workbook file " + wbFile);
                             handleDestFolderRefresh();
                         })
                     });
@@ -525,10 +534,11 @@ export default class Converter {
                         const loFolder = path.join(xFolder, "x-oli-learning_objectives");
                         fs.ensureDirSync(loFolder, function (err) {
                             if (err) {
+                                handleDestFolderRefresh();
                                 console.error("Error! creating x-oli-learning_objectives folder" + err);
                                 return handleErrors("Error! creating x-oli-learning_objectives folder" + err);
                             }
-                            console.log("success! creating x-oli-learning_objectives folder");
+                            console.log("Success! creating x-oli-learning_objectives folder");
                         });
                         let fullLoContent = en + loDocType + ss + serializeDocument(ldDoc.doc.context);
                         let xml_pp = pd.pd.xml(fullLoContent);
@@ -539,7 +549,7 @@ export default class Converter {
                                 console.error("Error! creating Learning Objectives file " + loFile + " " + err);
                                 return handleErrors("Error! creating Learning Objectives file " + loFile + " " + err);
                             }
-                            console.log("success! creating Learning Objectives file " + loFile);
+                            console.log("Success! creating Learning Objectives file " + loFile);
                             handleDestFolderRefresh();
                         })
                     }
@@ -561,26 +571,44 @@ export default class Converter {
         t = t.toLowerCase();
         if (t === "p") {
             let p = $('<p/>', xmlDoc);
-            //let textOnly = true;
+            let textOnly = true;
             $(childHtml).contents().each(function () {
-                ///let z = $(this).prop("tagName");
-                // if (z){
-                //     textOnly = false;
-                // }
+                let z = $(this).prop("tagName");
+                if (z) {
+                    textOnly = false;
+                }
                 handleN($, xmlDoc, p, $(this), handleN);
             });
-            // if(textOnly && childHtml.text().trim()) {
-                 parentXml.append(p);
-            // }
+            if (textOnly && !childHtml.text().trim()) {
+                return;
+            }
+            parentXml.append(p);
 
         } else if (t === "span") {
-            //:TODO: extract font encoded OLI elements
             let s = $('<span/>', xmlDoc);
-            let fontStyle = childHtml.css("fontStyle");
-            let fontWeight = childHtml.css("fontWeight");
-            let fontColor = childHtml.css("color");
-            let fontFamily = childHtml.css("fontFamily");
-            let textDecoration = childHtml.css("textDecoration");
+            var styleProps = childHtml.css([
+                "fontStyle", "fontWeight", "color", "fontFamily", "textDecoration"
+            ]);
+            let fontStyle = null;//childHtml.css("fontStyle");
+            let fontWeight = null;//childHtml.css("fontWeight");
+            let fontColor = null;//childHtml.css("color");
+            let fontFamily = null;//childHtml.css("fontFamily");
+            let textDecoration = null;//childHtml.css("textDecoration");
+            $.each(styleProps, function( prop, value ) {
+                //console.log( prop + ": " + value );
+                if(prop === "fontStyle"){
+                    fontStyle = value;
+                } else if(prop === "fontWeight"){
+                    fontWeight = value;
+                } else if(prop === "fontFamily"){
+                    fontFamily = value;
+                } else if(prop === "color"){
+                    fontColor = value;
+                } else if(prop === "textDecoration"){
+                    textDecoration = value;
+                }
+            });
+
             let em = null;
             if (fontStyle && fontStyle === 'italic') {
                 //console.log("font style " + fontStyle + " " +childHtml.text());
@@ -709,7 +737,7 @@ export default class Converter {
                     handleN($, xmlDoc, sup, $(this), handleN);
                 }
             });
-            if(!com) {
+            if (!com) {
                 parentXml.append(sup);
             }
 
@@ -726,7 +754,7 @@ export default class Converter {
                     handleN($, xmlDoc, sub, $(this), handleN);
                 }
             });
-            if(!com) {
+            if (!com) {
                 parentXml.append(sub);
             }
         }
