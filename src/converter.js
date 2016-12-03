@@ -96,6 +96,7 @@ export default class Converter {
                         return handleErrors('Error! parsing document to be converted ' + docFile);
                     }
                     const $ = window.$;
+
                     let en = '<?xml version="1.0" encoding="UTF-8"?>';
                     let wbDocType = '<!DOCTYPE workbook_page PUBLIC "-//Carnegie Mellon University//DTD Workbook Page 3.8//EN" "http://oli.cmu.edu/dtd/oli_workbook_page_3_8.dtd">';
                     let ss = '<?xml-stylesheet type="text/css" href="http://oli.cmu.edu/authoring/oxy-author/oli_workbook_page_3_8.css"?>'
@@ -105,6 +106,8 @@ export default class Converter {
                     let xmlDoc = null;
                     let ldDoc = null;
                     let cntWbs = 0;
+                    $( "span:empty" ).remove();
+                    $( "p:empty" ).remove();
                     $("body").contents().each(function () {
                         let t = $(this).prop("tagName").toLowerCase();
                         //Headings
@@ -507,7 +510,6 @@ export default class Converter {
                         wbContent = wbContent.replace(/<tbody>/g, "");
                         wbContent = wbContent.replace(/<\/tbody>/g, "");
                         wbContent = wbContent.replace(/<p\/>/g, "");
-                        wbContent = wbContent.replace(/<p><\/p>/g, "");
                         wbContent = wbContent.replace(/<span>/g, "");
                         wbContent = wbContent.replace(/<\/span>/g, "");
                         wbContent = wbContent.replace(/<span\/>/g, "");
@@ -516,7 +518,7 @@ export default class Converter {
                         let fullWbContent = en + wbDocType + ss + wbContent;
                         // Pretty print the content before writing to file
                         let xml_pp = pd.pd.xml(fullWbContent);
-                        //console.log("Workbook " + xml_pp);
+                        //console.log("Workbook " + fullWbContent);
                         let wbFile = path.join(wbFolder, d.id + ".xml");
                         fs.outputFile(wbFile, xml_pp, function (err) {
                             if (err) {
