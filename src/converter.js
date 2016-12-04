@@ -25,7 +25,7 @@ export default class Converter {
         this.handleDestFolderRefresh = argWrapper.handleDestFolderRefresh;
         this.handleErrors = argWrapper.handleErrors;
         this.handleprocess = this.process.bind(this);
-        this.handleN = this.handleNode.bind(this);
+        this.handleNode = this.handleNode.bind(this);
     }
 
     async convert() {
@@ -82,7 +82,7 @@ export default class Converter {
                 docFile = f.path;
             }
         });
-        const handleN = this.handleN;
+        const handelNode = this.handleNode;
         const commentOutInline = this.inlineCommentOut;
         const handleDestFolderRefresh = this.handleDestFolderRefresh;
         fs.readFile(docFile, 'utf8', function (err, data) {
@@ -418,11 +418,11 @@ export default class Converter {
                             }
                         } else if (t === "div") {
                             let el = xmlStack.pop();
-                            handleN($, xmlDoc, el, $(this), handleN);
+                            handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
                         } else if (t === "p") {
                             let el = xmlStack.pop();
-                            handleN($, xmlDoc, el, $(this), handleN);
+                            handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
                         } else if (t === "span") {
                             if ($(this).text() && $(this).text().trim()) {
@@ -464,7 +464,7 @@ export default class Converter {
                             }
                         } else if (t === "table") {
                             let el = xmlStack.pop();
-                            handleN($, xmlDoc, el, $(this), handleN);
+                            handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
                         } else if (t === "img") {
                             let image = $('<image/>', xmlDoc);
@@ -477,11 +477,11 @@ export default class Converter {
                             xmlStack.push(el);
                         } else if (t === "ol") {
                             let el = xmlStack.pop();
-                            handleN($, xmlDoc, el, $(this), handleN);
+                            handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
                         } else if (t === "ul") {
                             let el = xmlStack.pop();
-                            handleN($, xmlDoc, el, $(this), handleN);
+                            handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
                         }
                     });
@@ -559,7 +559,7 @@ export default class Converter {
         });
     }
 
-    handleNode($, xmlDoc, parentXml, childHtml, handleN) {
+    handleNode($, xmlDoc, parentXml, childHtml, handleNode) {
         let t = childHtml.prop("tagName");
         if (!t) {
             // Assumes element without tag name is text
@@ -578,7 +578,7 @@ export default class Converter {
                 if (z) {
                     textOnly = false;
                 }
-                handleN($, xmlDoc, p, $(this), handleN);
+                handleNode($, xmlDoc, p, $(this), handleNode);
             });
             if (textOnly && !childHtml.text().trim()) {
                 return;
@@ -643,7 +643,7 @@ export default class Converter {
                 s = em;
             }
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, s, $(this), handleN);
+                handleNode($, xmlDoc, s, $(this), handleNode);
             });
             parentXml.append(s);
         } else if (t === "a") {
@@ -674,20 +674,20 @@ export default class Converter {
         } else if (t === "table") {
             let tbl = $('<table/>', xmlDoc);
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, tbl, $(this), handleN);
+                handleNode($, xmlDoc, tbl, $(this), handleNode);
             });
             parentXml.append(tbl);
 
         } else if (t === "tr") {
             let tr = $('<tr/>', xmlDoc);
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, tr, $(this), handleN);
+                handleNode($, xmlDoc, tr, $(this), handleNode);
             });
             parentXml.append(tr);
         } else if (t === "td") {
             let td = $('<td/>', xmlDoc);
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, td, $(this), handleN);
+                handleNode($, xmlDoc, td, $(this), handleNode);
             });
             parentXml.append(td);
 
@@ -701,30 +701,30 @@ export default class Converter {
         } else if (t === "ol") {
             let ol = $('<ol/>', xmlDoc);
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, ol, $(this), handleN);
+                handleNode($, xmlDoc, ol, $(this), handleNode);
             });
             parentXml.append(ol);
         } else if (t === "ul") {
             let ul = $('<ul/>', xmlDoc);
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, ul, $(this), handleN);
+                handleNode($, xmlDoc, ul, $(this), handleNode);
             });
             parentXml.append(ul);
 
         } else if (t === "li") {
             let li = $('<li/>', xmlDoc);
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, li, $(this), handleN);
+                handleNode($, xmlDoc, li, $(this), handleNode);
             });
             parentXml.append(li);
         } else if (t === "tbody") {
             childHtml.contents().each(function () {
-                handleN($, xmlDoc, parentXml, $(this), handleN);
+                handleNode($, xmlDoc, parentXml, $(this), handleNode);
             });
         } else if (t === "div") {
             // Assumes div content contains Google Docs specific content
             // childHtml.contents().each(function () {
-            //     handleN($, xmlDoc, parentXml, $(this), handleN);
+            //     handleNode($, xmlDoc, parentXml, $(this), handleNode);
             // });
         } else if (t === "sup") {
             let sup = $('<sup/>', xmlDoc);
@@ -734,9 +734,9 @@ export default class Converter {
                 //Look for comment
                 if (href && href.startsWith("#cmnt")) {
                     com = true;
-                    handleN($, xmlDoc, parentXml, $(this), handleN);
+                    handleNode($, xmlDoc, parentXml, $(this), handleNode);
                 } else {
-                    handleN($, xmlDoc, sup, $(this), handleN);
+                    handleNode($, xmlDoc, sup, $(this), handleNode);
                 }
             });
             if (!com) {
@@ -751,9 +751,9 @@ export default class Converter {
                 //Look for comment
                 if (href && href.startsWith("#cmnt")) {
                     com = true;
-                    handleN($, xmlDoc, parentXml, $(this), handleN);
+                    handleNode($, xmlDoc, parentXml, $(this), handleNode);
                 } else {
-                    handleN($, xmlDoc, sub, $(this), handleN);
+                    handleNode($, xmlDoc, sub, $(this), handleNode);
                 }
             });
             if (!com) {
@@ -761,4 +761,5 @@ export default class Converter {
             }
         }
     }
+
 }
