@@ -30,47 +30,47 @@ function removeAppDirectory(path) {
     });
 }
 
-function zipDists() {
-    fs.readdirSync(dist_dir).filter(function(file) {
-        var f = path.join(dist_dir, file);
-        var stats = fs.statSync(f);
-        if(stats.isDirectory()){
-            console.log('To be zipped ' + __dirname + '/'+f);
-            archiveDir(f);
-        }
-    });
-}
-
-function archiveDir(dir){
-    // create a file to stream archive data to.
-
-    var output = fs.createWriteStream(__dirname + '/'+dir+'.zip');
-    var archive = archiver('zip', {
-        store: true // Sets the compression method to STORE.
-    });
-
-// listen for all archive data to be written
-    output.on('close', function() {
-        console.log(archive.pointer() + ' total bytes');
-        console.log('archiver has been finalized and the output file descriptor has closed.');
-    });
-
-// good practice to catch this error explicitly
-    archive.on('error', function(err) {
-        console.log('Error archiving dist folder ' + err);
-    });
-
-// pipe archive data to the file
-    archive.pipe(output);
-
-    // append files from a directory
-    archive.directory(dir);
-
-
-// finalize the archive (ie we are done appending files but streams have to finish yet)
-    archive.finalize();
-
-}
+// function zipDists() {
+//     fs.readdirSync(dist_dir).filter(function(file) {
+//         var f = path.join(dist_dir, file);
+//         var stats = fs.statSync(f);
+//         if(stats.isDirectory()){
+//             console.log('To be zipped ' + __dirname + '/'+f);
+//             archiveDir(f);
+//         }
+//     });
+// }
+//
+// function archiveDir(dir){
+//     // create a file to stream archive data to.
+//
+//     var output = fs.createWriteStream(__dirname + '/'+dir+'.zip');
+//     var archive = archiver('zip', {
+//         store: true // Sets the compression method to STORE.
+//     });
+//
+// // listen for all archive data to be written
+//     output.on('close', function() {
+//         console.log(archive.pointer() + ' total bytes');
+//         console.log('archiver has been finalized and the output file descriptor has closed.');
+//     });
+//
+// // good practice to catch this error explicitly
+//     archive.on('error', function(err) {
+//         console.log('Error archiving dist folder ' + err);
+//     });
+//
+// // pipe archive data to the file
+//     archive.pipe(output);
+//
+//     // append files from a directory
+//     archive.directory(dir);
+//
+//
+// // finalize the archive (ie we are done appending files but streams have to finish yet)
+//     archive.finalize();
+//
+// }
 
 fs.walk(dist_dir)
     .on('data', function (item) {
