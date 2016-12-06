@@ -16,6 +16,7 @@
     "package-for-this": "cross-env NODE_ENV=production electron-packager . oli-gdocs-converter --version 1.4.10 --out=dist --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\""
   },
   "devDependencies": {
+    "archiver": "^1.2.0",
     "asar": "^0.12.3",
     "babel": "^6.5.2",
     "babel-plugin-array-includes": "^2.0.3",

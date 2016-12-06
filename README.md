@@ -1,6 +1,6 @@
 # oli-gdocs-converter
 
-This is an [Electron](http://electron.atom.io/) application, using [electron-compile](https://github.com/electron/electron-compile).
+OLI Google Docs Converter is an OLI tool for converting Google Documents to OLI XML. It is a desktop application build on top of the [Electron](http://electron.atom.io/) framework, using [electron-compile](https://github.com/electron/electron-compile).
 
 ## Install
 
