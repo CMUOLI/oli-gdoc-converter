@@ -16,4 +16,5 @@ app.on('ready', () => {
     });
 
     mainWindow.loadURL(`file://${__dirname}/renderer/index.html`);
+    //mainWindow.webContents.openDevTools();
 });

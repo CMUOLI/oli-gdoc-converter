@@ -68,26 +68,31 @@ export default class Converter {
         let docFile = null;
         const handleErrors = this.handleErrors;
         items.forEach((f) => {
-            if (f.stats.isDirectory() && f.path.endsWith("images")) {
+            if (f.stats.isDirectory() && f.path.endsWith('images')) {
                 //console.log("Images directory " + f.path);
                 // Move images directory to webcontent
-                fs.move(f.path, path.join(xFolder, "webcontent"), function (err) {
+                fs.move(f.path, path.join(xFolder, 'webcontent'), function (err) {
                     if (err) {
                         console.error(err);
                         return handleErrors('Error! moving images directory to webcontent directory');
                     }
                     console.log('Success! moving images directory to webcontent directory');
                 })
-            } else if (f.stats.isFile() && f.path.endsWith(".html")) {
+            } else if (f.stats.isFile() && f.path.endsWith('.html')) {
                 docFile = f.path;
             }
         });
         const handelNode = this.handleNode;
         const commentOutInline = this.inlineCommentOut;
         const handleDestFolderRefresh = this.handleDestFolderRefresh;
+        // Is it possible to use local copy of JQuery???
+        //const jquery = fs.readFileSync(__dirname +"/assets/js/jquery.js", "utf-8");
+        //const jquery = "file://"+__dirname +"/assets/js/jquery.js";
+
         fs.readFile(docFile, 'utf8', function (err, data) {
             jsdom.env(
                 data,
+                //[jquery],
                 ["http://code.jquery.com/jquery.js"],
                 function (err, window) {
                     console.log('Done creating jdom environment');
@@ -106,12 +111,12 @@ export default class Converter {
                     let xmlDoc = null;
                     let ldDoc = null;
                     let cntWbs = 0;
-                    $( "span:empty" ).remove();
-                    $( "p:empty" ).remove();
-                    $("body").contents().each(function () {
-                        let t = $(this).prop("tagName").toLowerCase();
+                    $( 'span:empty' ).remove();
+                    $( 'p:empty' ).remove();
+                    $('body').contents().each(function () {
+                        let t = $(this).prop('tagName').toLowerCase();
                         //Headings
-                        if (t === "h1" || t === "h2" || t === "h3" || t === "h4" || t === "h5" || t === "h6") {
+                        if (t === 'h1' || t === 'h2' || t === 'h3' || t === 'h4' || t === 'h5' || t === 'h6') {
                             let newDoc = false;
                             if (xmlDoc === null) {
                                 newDoc = true;
@@ -134,16 +139,16 @@ export default class Converter {
                                 return handleErrors('Error! Document to be converted not well formed ' + docFile);
                             }
                             //:TODO: refactor code for better DRY
-                            if ($(this).text().toUpperCase().startsWith("OBJECTIVE:")) {
+                            if ($(this).text().toUpperCase().startsWith('OBJECTIVE:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 if (sp.length > 2) {
                                     // Create learning objective file
                                     if (ldDoc === null) {
-                                        let id = path.basename(docFile, '.html') + "_LO";
+                                        let id = path.basename(docFile, '.html') + '_LO';
                                         ldDoc = {id: id, doc: $($.parseXML('<objectives/>'))};
                                         $('objectives', ldDoc.doc).attr({id: id});
-                                        $('objectives', ldDoc.doc).append($('<title/>', ldDoc.doc).text("Learning Objectives"));
+                                        $('objectives', ldDoc.doc).append($('<title/>', ldDoc.doc).text('Learning Objectives'));
                                     }
                                     let ob = $('<objective/>', ldDoc.doc);
                                     let s = sp[1];
@@ -155,14 +160,14 @@ export default class Converter {
                                 let s = sp[1];
                                 obref.attr({idref: s});
                                 $('head', xmlDoc).append(obref);
-                            } else if ($(this).text().toUpperCase().startsWith("EXAMPLE:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('EXAMPLE:')) {
                                 let example = $('<example/>', xmlDoc);
                                 example.append($('<title/>', xmlDoc).text($(this).text()));
                                 let el = xmlStack.pop();
                                 el.append(example);
                                 xmlStack.push(el);
                                 xmlStack.push(example);
-                            } else if ($(this).text().toUpperCase().startsWith("LEARNBYDOING:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('LEARNBYDOING:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -172,12 +177,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<wbinline/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "learnbydoing"});
+                                    inline.attr({purpose: 'learnbydoing'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("YOUTUBE:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('YOUTUBE:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
 
@@ -190,7 +195,7 @@ export default class Converter {
                                 let el = xmlStack.pop();
                                 el.append(youtube);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("MANYSTUDENTSWONDER:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('MANYSTUDENTSWONDER:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -200,12 +205,12 @@ export default class Converter {
                                 } else {
                                     let inline = $('<wbinline/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "manystudentswonder"});
+                                    inline.attr({purpose: 'manystudentswonder'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("DIDIGETTHIS:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('DIDIGETTHIS:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -215,12 +220,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<wbinline/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "didigetthis"});
+                                    inline.attr({purpose: 'didigetthis'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("DEFINITION:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('DEFINITION:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -239,10 +244,10 @@ export default class Converter {
                                 el.append(definition);
                                 xmlStack.push(el);
                                 xmlStack.push(material);
-                            } else if ($(this).text().toUpperCase().startsWith("PAGE:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('PAGE:')) {
                                 xmlStack = new Array();
                                 xmlDoc = null;
-                            } else if ($(this).text().toUpperCase().startsWith("NOTE:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('NOTE:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let pullout = $('<pullout/>', xmlDoc);
@@ -254,7 +259,7 @@ export default class Converter {
                                 el.append(pullout);
                                 xmlStack.push(el);
                                 xmlStack.push(pullout);
-                            } else if ($(this).text().toUpperCase().startsWith("NOTATION:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('NOTATION:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let pullout = $('<pullout/>', xmlDoc);
@@ -266,7 +271,7 @@ export default class Converter {
                                 el.append(pullout);
                                 xmlStack.push(el);
                                 xmlStack.push(pullout);
-                            } else if ($(this).text().toUpperCase().startsWith("OBSERVATION:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('OBSERVATION:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let pullout = $('<pullout/>', xmlDoc);
@@ -278,7 +283,7 @@ export default class Converter {
                                 el.append(pullout);
                                 xmlStack.push(el);
                                 xmlStack.push(pullout);
-                            } else if ($(this).text().toUpperCase().startsWith("RESEARCH:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('RESEARCH:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let pullout = $('<pullout/>', xmlDoc);
@@ -290,7 +295,7 @@ export default class Converter {
                                 el.append(pullout);
                                 xmlStack.push(el);
                                 xmlStack.push(pullout);
-                            } else if ($(this).text().toUpperCase().startsWith("TIP:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('TIP:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let pullout = $('<pullout/>', xmlDoc);
@@ -302,7 +307,7 @@ export default class Converter {
                                 el.append(pullout);
                                 xmlStack.push(el);
                                 xmlStack.push(pullout);
-                            } else if ($(this).text().toUpperCase().startsWith("TOSUMUP:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('TOSUMUP:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let pullout = $('<pullout/>', xmlDoc);
@@ -314,7 +319,7 @@ export default class Converter {
                                 el.append(pullout);
                                 xmlStack.push(el);
                                 xmlStack.push(pullout);
-                            } else if ($(this).text().toUpperCase().startsWith("CHECKPOINT:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('CHECKPOINT:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -324,12 +329,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<activity/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "checkpoint"});
+                                    inline.attr({purpose: 'checkpoint'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("LAB:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('LAB:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -339,12 +344,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<activity/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "lab"});
+                                    inline.attr({purpose: 'lab'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("MYRESPONSE:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('MYRESPONSE:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -354,12 +359,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<wbinline/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "myresponse"});
+                                    inline.attr({purpose: 'myresponse'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("QUIZ:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('QUIZ:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -369,12 +374,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<activity/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "quiz"});
+                                    inline.attr({purpose: 'quiz'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("SIMULATION:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('SIMULATION:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -384,12 +389,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<activity/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "simulation"});
+                                    inline.attr({purpose: 'simulation'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("WALKTHROUGH:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('WALKTHROUGH:')) {
                                 let text = $(this).text();
                                 let sp = text.split(":");
                                 let s = sp[1];
@@ -399,12 +404,12 @@ export default class Converter {
                                 } else {
                                     inline = $('<wbinline/>', xmlDoc);
                                     inline.attr({idref: s});
-                                    inline.attr({purpose: "walkthrough"});
+                                    inline.attr({purpose: 'walkthrough'});
                                 }
                                 let el = xmlStack.pop();
                                 el.append(inline);
                                 xmlStack.push(el);
-                            } else if ($(this).text().toUpperCase().startsWith("END:")) {
+                            } else if ($(this).text().toUpperCase().startsWith('END:')) {
                                 xmlStack.pop();
                             } else if (!newDoc) {
                                 let section = $('<section/>', xmlDoc);
@@ -416,27 +421,27 @@ export default class Converter {
                                 section.append(sBod);
                                 xmlStack.push(sBod);
                             }
-                        } else if (t === "div") {
+                        } else if (t === 'div') {
                             let el = xmlStack.pop();
                             handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
-                        } else if (t === "p") {
+                        } else if (t === 'p') {
                             let el = xmlStack.pop();
                             handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
-                        } else if (t === "span") {
+                        } else if (t === 'span') {
                             if ($(this).text() && $(this).text().trim()) {
                                 let t = $(this).text().replace(/\u00a0/g, " ");
                                 let el = xmlStack.pop();
                                 el.append(t);
                                 xmlStack.push(el);
                             }
-                        } else if (t === "a") {
+                        } else if (t === 'a') {
                             let z = $(this).text().replace(/\u00a0/g, " ");
                             if (z.trim()) {
                                 let href = $(this).attr('href');
                                 if (href) {
-                                    if (href.startsWith("#cmnt")) {
+                                    if (href.startsWith('#cmnt')) {
                                         // Process Google Docs comment
                                         let commentRef = $(href);
                                         if (commentRef && commentRef.parent()) {
@@ -462,46 +467,46 @@ export default class Converter {
                                     }
                                 }
                             }
-                        } else if (t === "table") {
+                        } else if (t === 'table') {
                             let el = xmlStack.pop();
                             handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
-                        } else if (t === "img") {
+                        } else if (t === 'img') {
                             let image = $('<image/>', xmlDoc);
                             let src = $(this).attr('src');
                             let i = src.lastIndexOf("/");
-                            src = "../webcontent" + src.substring(i);
+                            src = '../webcontent' + src.substring(i);
                             image.attr({src: src});
                             let el = xmlStack.pop();
                             el.append(image);
                             xmlStack.push(el);
-                        } else if (t === "ol") {
+                        } else if (t === 'ol') {
                             let el = xmlStack.pop();
                             handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
-                        } else if (t === "ul") {
+                        } else if (t === 'ul') {
                             let el = xmlStack.pop();
                             handelNode($, xmlDoc, el, $(this), handelNode);
                             xmlStack.push(el);
                         }
                     });
-                    console.log("Document processing done");
+                    console.log('Document processing done');
                     fs.removeSync(docFile, function (err) {
                         if (err) {
-                            console.error("Error! removing " + docFile + " " + err);
-                            return handleErrors("Error! removing " + docFile + " " + err);
+                            console.error('Error! removing ' + docFile + ' ' + err);
+                            return handleErrors("Error! removing " + docFile + ' ' + err);
                         }
-                        console.log("Success! removing " + docFile);
+                        console.log('Success! removing ' + docFile);
                     });
 
                     var serializeDocument = jsdom.serializeDocument;
-                    const wbFolder = path.join(xFolder, "x-oli-workbook_page");
+                    const wbFolder = path.join(xFolder, 'x-oli-workbook_page');
                     fs.ensureDirSync(wbFolder, function (err) {
                         if (err) {
-                            console.error("Error! creating x-oli-workbook_page folder" + err);
-                            return handleErrors("Error! creating x-oli-workbook_page folder" + err);
+                            console.error('Error! creating x-oli-workbook_page folder' + err);
+                            return handleErrors('Error! creating x-oli-workbook_page folder' + err);
                         }
-                        console.log("Success! creating x-oli-workbook_page folder");
+                        console.log('Success! creating x-oli-workbook_page folder');
                     });
                     pages.forEach((d) => {
                         let wbContent = serializeDocument(d.doc.context);
@@ -519,38 +524,38 @@ export default class Converter {
                         // Pretty print the content before writing to file
                         let xml_pp = pd.pd.xml(fullWbContent);
                         //console.log("Workbook " + fullWbContent);
-                        let wbFile = path.join(wbFolder, d.id + ".xml");
+                        let wbFile = path.join(wbFolder, d.id + '.xml');
                         fs.outputFile(wbFile, xml_pp, function (err) {
                             if (err) {
                                 handleDestFolderRefresh();
-                                console.error("Error! creating workbook file " + wbFile + " " + err);
-                                return handleErrors("Error! creating workbook file " + wbFile + " " + err);
+                                console.error('Error! creating workbook file ' + wbFile + ' ' + err);
+                                return handleErrors('Error! creating workbook file ' + wbFile + ' ' + err);
                             }
-                            console.log("Success! creating workbook file " + wbFile);
+                            console.log('Success! creating workbook file ' + wbFile);
                             handleDestFolderRefresh();
                         })
                     });
 
                     if (ldDoc !== null) {
-                        const loFolder = path.join(xFolder, "x-oli-learning_objectives");
+                        const loFolder = path.join(xFolder, 'x-oli-learning_objectives');
                         fs.ensureDirSync(loFolder, function (err) {
                             if (err) {
                                 handleDestFolderRefresh();
-                                console.error("Error! creating x-oli-learning_objectives folder" + err);
-                                return handleErrors("Error! creating x-oli-learning_objectives folder" + err);
+                                console.error('Error! creating x-oli-learning_objectives folder' + err);
+                                return handleErrors('Error! creating x-oli-learning_objectives folder' + err);
                             }
-                            console.log("Success! creating x-oli-learning_objectives folder");
+                            console.log('Success! creating x-oli-learning_objectives folder');
                         });
                         let fullLoContent = en + loDocType + ss + serializeDocument(ldDoc.doc.context);
                         let xml_pp = pd.pd.xml(fullLoContent);
                         //console.log("Objectives "  +xml_pp);
-                        let loFile = path.join(loFolder, ldDoc.id + ".xml");
+                        let loFile = path.join(loFolder, ldDoc.id + '.xml');
                         fs.outputFile(loFile, xml_pp, function (err) {
                             if (err) {
-                                console.error("Error! creating Learning Objectives file " + loFile + " " + err);
-                                return handleErrors("Error! creating Learning Objectives file " + loFile + " " + err);
+                                console.error('Error! creating Learning Objectives file ' + loFile + ' ' + err);
+                                return handleErrors('Error! creating Learning Objectives file ' + loFile + ' ' + err);
                             }
-                            console.log("Success! creating Learning Objectives file " + loFile);
+                            console.log('Success! creating Learning Objectives file ' + loFile);
                             handleDestFolderRefresh();
                         })
                     }
@@ -560,7 +565,7 @@ export default class Converter {
     }
 
     handleNode($, xmlDoc, parentXml, childHtml, handleNode) {
-        let t = childHtml.prop("tagName");
+        let t = childHtml.prop('tagName');
         if (!t) {
             // Assumes element without tag name is text
             let z = childHtml.text().replace(/\u00a0/g, " ");
@@ -570,11 +575,11 @@ export default class Converter {
             return;
         }
         t = t.toLowerCase();
-        if (t === "p") {
+        if (t === 'p') {
             let p = $('<p/>', xmlDoc);
             let textOnly = true;
             $(childHtml).contents().each(function () {
-                let z = $(this).prop("tagName");
+                let z = $(this).prop('tagName');
                 if (z) {
                     textOnly = false;
                 }
@@ -585,10 +590,10 @@ export default class Converter {
             }
             parentXml.append(p);
 
-        } else if (t === "span") {
+        } else if (t === 'span') {
             let s = $('<span/>', xmlDoc);
             var styleProps = childHtml.css([
-                "fontStyle", "fontWeight", "color", "fontFamily", "textDecoration"
+                'fontStyle', 'fontWeight', 'color', 'fontFamily', 'textDecoration'
             ]);
             let fontStyle = null;//childHtml.css("fontStyle");
             let fontWeight = null;//childHtml.css("fontWeight");
@@ -597,15 +602,15 @@ export default class Converter {
             let textDecoration = null;//childHtml.css("textDecoration");
             $.each(styleProps, function( prop, value ) {
                 //console.log( prop + ": " + value );
-                if(prop === "fontStyle"){
+                if(prop === 'fontStyle'){
                     fontStyle = value;
-                } else if(prop === "fontWeight"){
+                } else if(prop === 'fontWeight'){
                     fontWeight = value;
-                } else if(prop === "fontFamily"){
+                } else if(prop === 'fontFamily'){
                     fontFamily = value;
-                } else if(prop === "color"){
+                } else if(prop === 'color'){
                     fontColor = value;
-                } else if(prop === "textDecoration"){
+                } else if(prop === 'textDecoration'){
                     textDecoration = value;
                 }
             });
@@ -646,12 +651,12 @@ export default class Converter {
                 handleNode($, xmlDoc, s, $(this), handleNode);
             });
             parentXml.append(s);
-        } else if (t === "a") {
+        } else if (t === 'a') {
             let z = childHtml.text().replace(/\u00a0/g, " ");
             if (z.trim()) {
                 let href = childHtml.attr('href');
                 if (href) {
-                    if (href.startsWith("#cmnt")) {
+                    if (href.startsWith('#cmnt')) {
                         // Process Google Docs comment
                         let commentRef = $(href);
                         if (commentRef && commentRef.parent()) {
@@ -671,68 +676,68 @@ export default class Converter {
                     }
                 }
             }
-        } else if (t === "table") {
+        } else if (t === 'table') {
             let tbl = $('<table/>', xmlDoc);
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, tbl, $(this), handleNode);
             });
             parentXml.append(tbl);
 
-        } else if (t === "tr") {
+        } else if (t === 'tr') {
             let tr = $('<tr/>', xmlDoc);
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, tr, $(this), handleNode);
             });
             parentXml.append(tr);
-        } else if (t === "td") {
+        } else if (t === 'td') {
             let td = $('<td/>', xmlDoc);
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, td, $(this), handleNode);
             });
             parentXml.append(td);
 
-        } else if (t === "img") {
+        } else if (t === 'img') {
             let image = $('<image/>', xmlDoc);
             let src = childHtml.attr('src');
-            let i = src.lastIndexOf("/");
-            src = "../webcontent" + src.substring(i);
+            let i = src.lastIndexOf('/');
+            src = '../webcontent' + src.substring(i);
             image.attr({src: src});
             parentXml.append(image);
-        } else if (t === "ol") {
+        } else if (t === 'ol') {
             let ol = $('<ol/>', xmlDoc);
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, ol, $(this), handleNode);
             });
             parentXml.append(ol);
-        } else if (t === "ul") {
+        } else if (t === 'ul') {
             let ul = $('<ul/>', xmlDoc);
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, ul, $(this), handleNode);
             });
             parentXml.append(ul);
 
-        } else if (t === "li") {
+        } else if (t === 'li') {
             let li = $('<li/>', xmlDoc);
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, li, $(this), handleNode);
             });
             parentXml.append(li);
-        } else if (t === "tbody") {
+        } else if (t === 'tbody') {
             childHtml.contents().each(function () {
                 handleNode($, xmlDoc, parentXml, $(this), handleNode);
             });
-        } else if (t === "div") {
+        } else if (t === 'div') {
             // Assumes div content contains Google Docs specific content
             // childHtml.contents().each(function () {
             //     handleNode($, xmlDoc, parentXml, $(this), handleNode);
             // });
-        } else if (t === "sup") {
+        } else if (t === 'sup') {
             let sup = $('<sup/>', xmlDoc);
             let com = false;
             childHtml.contents().each(function () {
                 let href = $(this).attr('href');
                 //Look for comment
-                if (href && href.startsWith("#cmnt")) {
+                if (href && href.startsWith('#cmnt')) {
                     com = true;
                     handleNode($, xmlDoc, parentXml, $(this), handleNode);
                 } else {
@@ -743,13 +748,13 @@ export default class Converter {
                 parentXml.append(sup);
             }
 
-        } else if (t === "sub") {
+        } else if (t === 'sub') {
             let sub = $('<sub/>', xmlDoc);
             let com = false;
             childHtml.contents().each(function () {
                 let href = $(this).attr('href');
                 //Look for comment
-                if (href && href.startsWith("#cmnt")) {
+                if (href && href.startsWith('#cmnt')) {
                     com = true;
                     handleNode($, xmlDoc, parentXml, $(this), handleNode);
                 } else {
@@ -761,5 +766,4 @@ export default class Converter {
             }
         }
     }
-
 }
