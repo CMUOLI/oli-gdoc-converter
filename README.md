@@ -13,3 +13,9 @@ npm install
 ```sh
 npm start
 ```
+
+## Package application for mac, linux and windows distribution
+
+```sh
+npm run package
+```
