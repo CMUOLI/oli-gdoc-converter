@@ -1,5 +1,5 @@
 {
-  "name": "oli-gdocs-converter",
+  "name": "OLIConverter",
   "version": "1.0.0",
   "description": "OLI Google Docs converter tool. Transforms formated Docs to corresponding OLI workbook pages",
   "main": "es6-init.js",
@@ -9,11 +9,11 @@
     "clean-source": "node cleaner.js \"./dist\"",
     "compile": "cross-env NODE_ENV=production electron-compile --appDir . ./src",
     "package": "run-s clean-cache compile package-osx package-linux package-win clean-source",
-    "package-linux": "cross-env NODE_ENV=production electron-packager . oli-gdocs-converter --version 1.4.10  --out=dist --platform=linux --arch=all --icon ./src/assets/images/logo.png --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\"",
-    "package-win": "cross-env NODE_ENV=production electron-packager . oli-gdocs-converter --version 1.4.10  --out=dist --platform=win32 --arch=all --icon ./src/assets/images/logo.ico --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\"",
-    "package-osx": "cross-env NODE_ENV=production electron-packager . oli-gdocs-converter --version 1.4.10  --out=dist --platform=darwin --arch=all --icon ./src/assets/images/logo.icns --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\"",
+    "package-linux": "cross-env NODE_ENV=production electron-packager . OLIConverter --version 1.4.10  --out=dist --platform=linux --arch=all --icon ./src/assets/images/logo.png --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\"",
+    "package-win": "cross-env NODE_ENV=production electron-packager . OLIConverter --version 1.4.10  --out=dist --platform=win32 --arch=all --icon ./src/assets/images/logo.ico --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\"",
+    "package-osx": "cross-env NODE_ENV=production electron-packager . OLIConverter --version 1.4.10  --out=dist --platform=darwin --arch=all --icon ./src/assets/images/logo.icns --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\"",
     "quick-package": "run-s clean-cache compile package-osx clean-source",
-    "package-for-this": "cross-env NODE_ENV=production electron-packager . oli-gdocs-converter --version 1.4.10 --out=dist --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\""
+    "package-for-this": "cross-env NODE_ENV=production electron-packager . OLIConverter --version 1.4.10 --out=dist --overwrite --ignore=\".compilerc|.gitignore|cleaner.js|.DS_Store|.idea|nbproject\""
   },
   "devDependencies": {
     "archiver": "^1.2.0",

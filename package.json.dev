@@ -1,0 +1,27 @@
+{
+  "name": "OLIConverter",
+  "version": "1.0.0",
+  "description": "OLI Google Docs converter tool. Transforms formated Docs to corresponding OLI workbook pages",
+  "main": "src/app.js",
+  "author": "Raphael Gachuhi <rgachuhi@andrew.cmu.edu",
+  "license": "MIT",
+  "dependencies": {
+    "babel-runtime": "^6.18.0",
+     "fs-extra": "^1.0.0",
+     "jsdom": "^9.8.3",
+     "pify": "^2.3.0",
+     "pretty-data": "^0.40.0",
+     "react": "^15.4.1",
+     "react-dom": "^15.4.1",
+     "unzip": "^0.1.11"
+  },
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "babel-preset-es2016-node5": "^1.1.2",
+    "babel-preset-react": "^6.16.0",
+    "electron-prebuilt-compile": "^1.4.10"
+  }
+}
