@@ -9,4 +9,3 @@ dist/
 release/
 npm-debug.log
 .cache
-.DS_Store/
